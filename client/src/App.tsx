@@ -27,9 +27,9 @@ export default function App() {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/patients" element={<PatientsPage />} />
             <Route path="/visitors" element={<VisitorsPage />} />
+            <Route path="/shifts" element={<ShiftsPage />} />
             <Route element={<AdminRoute />}>
               <Route path="/staff" element={<StaffPage />} />
-              <Route path="/shifts" element={<ShiftsPage />} />
               <Route path="/emails" element={<EmailsPage />} />
             </Route>
           </Route>

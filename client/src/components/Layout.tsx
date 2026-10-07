@@ -25,10 +25,10 @@ export function Layout() {
     { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
     { to: '/patients', label: 'Patients', icon: Users },
     { to: '/visitors', label: 'Visitors', icon: UserCheck },
+    { to: '/shifts', label: 'Shifts & Schedule', icon: CalendarClock },
     ...(isAdmin
       ? [
           { to: '/staff', label: 'Staff Team', icon: ShieldCheck },
-          { to: '/shifts', label: 'Shifts & Schedule', icon: CalendarClock },
           { to: '/emails', label: 'Email Logs', icon: Mail },
         ]
       : []),

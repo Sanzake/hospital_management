@@ -10,6 +10,7 @@ import {
 import { api } from '../api'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
+import { useAuth } from '../store/auth'
 import { useToast } from '../store/toast'
 import type { Shift, User as UserType } from '../types'
 import {
@@ -34,14 +35,18 @@ function calculateShiftHours(start: string, end: string) {
   if (!start || !end) return ''
   const [sh, sm] = start.split(':').map(Number)
   const [eh, em] = end.split(':').map(Number)
-  const mins = eh * 60 + em - (sh * 60 + sm)
-  if (mins <= 0) return ''
+  let mins = eh * 60 + em - (sh * 60 + sm)
+  if (mins < 0) mins += 24 * 60 // Overnight / crossing midnight
+  if (mins === 0) return ''
   const hours = Math.floor(mins / 60)
   const remainingMins = mins % 60
-  return remainingMins > 0 ? `${hours}h ${remainingMins}m` : `${hours} hrs`
+  const durationStr = remainingMins > 0 ? `${hours}h ${remainingMins}m` : `${hours} hrs`
+  return eh < sh ? `${durationStr} (night)` : durationStr
 }
 
 export function ShiftsPage() {
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
   const [rows, setRows] = useState<Shift[]>([])
   const [staff, setStaff] = useState<UserType[]>([])
   const [loading, setLoading] = useState(true)
@@ -109,8 +114,8 @@ export function ShiftsPage() {
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (form.start_time >= form.end_time) {
-      addToast('End time must be after start time', 'error')
+    if (form.start_time === form.end_time) {
+      addToast('Start time and end time cannot be identical', 'error')
       return
     }
     setBusy(true)
@@ -162,10 +167,12 @@ export function ShiftsPage() {
             Staff duty rosters, department shifts, and working hours
           </p>
         </div>
-        <button className={btnPrimary} onClick={startCreate}>
-          <CalendarClock className="h-4 w-4" />
-          <span>Schedule Shift</span>
-        </button>
+        {isAdmin && (
+          <button className={btnPrimary} onClick={startCreate}>
+            <CalendarClock className="h-4 w-4" />
+            <span>Schedule Shift</span>
+          </button>
+        )}
       </div>
 
       {error && (
@@ -208,7 +215,7 @@ export function ShiftsPage() {
                 <th className={thClass}>Date</th>
                 <th className={thClass}>Hours & Duration</th>
                 <th className={thClass}>Notes</th>
-                <th className={`${thClass} text-right`}>Actions</th>
+                {isAdmin && <th className={`${thClass} text-right`}>Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -281,25 +288,27 @@ export function ShiftsPage() {
                           {row.notes || <span className="italic text-slate-300">No notes</span>}
                         </span>
                       </td>
-                      <td className={`${tdClass} text-right space-x-1`}>
-                        <button
-                          type="button"
-                          className={btnGhost}
-                          onClick={() => startEdit(row)}
-                          title="Edit shift"
-                        >
-                          <Edit2 className="h-3.5 w-3.5" />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          type="button"
-                          className={btnDanger}
-                          onClick={() => setDeleting(row)}
-                          title="Delete shift"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </td>
+                      {isAdmin && (
+                        <td className={`${tdClass} text-right space-x-1`}>
+                          <button
+                            type="button"
+                            className={btnGhost}
+                            onClick={() => startEdit(row)}
+                            title="Edit shift"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            className={btnDanger}
+                            onClick={() => setDeleting(row)}
+                            title="Delete shift"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   )
                 })
@@ -318,6 +327,11 @@ export function ShiftsPage() {
           submitLabel={editing ? 'Update Shift' : 'Save Shift'}
           busy={busy}
         >
+          {staff.length === 0 && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 mb-2">
+              No staff members found. Please add staff in Access Control first.
+            </div>
+          )}
           <div>
             <label className="block text-xs font-semibold text-slate-700">Staff Member</label>
             <select

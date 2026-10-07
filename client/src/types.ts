@@ -42,6 +42,8 @@ export type Visit = {
   status: VisitStatus
   created_at: string
   patients?: Pick<Patient, 'id' | 'full_name' | 'email'>
+  email_status?: 'sent' | 'failed'
+  email_error?: string | null
 }
 
 export type EmailRecord = {

@@ -27,7 +27,7 @@ const closeSchema = z.object({
 
 router.get('/', async (req, res) => {
   const { q, status, page, limit } = req.query;
-  let query = supabase.from('visitors').select(SELECT, { count: 'exact' });
+  let query = supabase.from('visitors').select(SELECT, (page || limit) ? { count: 'exact' } : undefined);
 
   if (status && ['open', 'closed'].includes(status)) {
     query = query.eq('status', status);
@@ -92,6 +92,9 @@ router.post('/:id/close', validate(closeSchema), async (req, res) => {
     sent_at: new Date().toISOString(),
   };
 
+  let emailStatus = 'sent';
+  let emailError = null;
+
   try {
     if (!toEmail) throw new Error('Patient has no email');
     const { subject, body } = await sendVisitSummaryEmail({
@@ -102,26 +105,32 @@ router.post('/:id/close', validate(closeSchema), async (req, res) => {
       checkIn: closed.check_in_at,
       checkOut,
     });
-    const { error: emailError } = await supabase.from('emails').insert({
+    const { error: emailErr } = await supabase.from('emails').insert({
       ...payload,
       subject,
       body,
       status: 'sent',
     });
-    if (emailError) console.error(emailError);
+    if (emailErr) console.error(emailErr);
   } catch (err) {
+    emailStatus = 'failed';
+    emailError = err.message;
     const subject = `Visit summary for ${patient?.full_name || 'patient'}`;
     const body = req.body.summary;
-    const { error: emailError } = await supabase.from('emails').insert({
+    const { error: emailErr } = await supabase.from('emails').insert({
       ...payload,
       subject,
       body: `${body}\n\nSend error: ${err.message}`,
       status: 'failed',
     });
-    if (emailError) console.error(emailError);
+    if (emailErr) console.error(emailErr);
   }
 
-  return res.json(closed);
+  return res.json({
+    ...closed,
+    email_status: emailStatus,
+    email_error: emailError,
+  });
 });
 
 router.get('/:id', async (req, res) => {
@@ -167,7 +176,7 @@ router.put('/:id', validate(updateSchema), async (req, res) => {
   return res.json(data);
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireRole('admin'), async (req, res) => {
   const { data, error } = await supabase
     .from('visitors')
     .delete()

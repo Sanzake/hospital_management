@@ -19,7 +19,7 @@ const updateSchema = createSchema.partial();
 
 router.get('/', async (req, res) => {
   const { q, priority, page, limit } = req.query;
-  let query = supabase.from('patients').select('*', { count: 'exact' });
+  let query = supabase.from('patients').select('*', (page || limit) ? { count: 'exact' } : undefined);
 
   if (priority && ['low', 'medium', 'high'].includes(priority)) {
     query = query.eq('priority', priority);
@@ -59,15 +59,21 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/', validate(createSchema), async (req, res) => {
-  const { data, error } = await supabase.from('patients').insert(req.body).select('*').single();
+  const payload = {
+    ...req.body,
+    email: req.body.email.toLowerCase(),
+  };
+  const { data, error } = await supabase.from('patients').insert(payload).select('*').single();
   if (error) return res.status(500).json({ error: error.message });
   return res.status(201).json(data);
 });
 
 router.put('/:id', validate(updateSchema), async (req, res) => {
+  const patch = { ...req.body };
+  if (patch.email) patch.email = patch.email.toLowerCase();
   const { data, error } = await supabase
     .from('patients')
-    .update(req.body)
+    .update(patch)
     .eq('id', req.params.id)
     .select('*')
     .maybeSingle();

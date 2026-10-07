@@ -40,8 +40,13 @@ export const useAuth = create<AuthState>((set, get) => ({
       const data = await api<{ user: User }>('/auth/me')
       set({ user: data.user, loading: false })
     } catch {
-      localStorage.removeItem('hm-token')
-      set({ token: null, user: null, loading: false })
+      // If api() detected 401, it already cleared 'hm-token' from localStorage
+      if (!localStorage.getItem('hm-token')) {
+        set({ token: null, user: null, loading: false })
+      } else {
+        // Temporary network lag or Render cold start: preserve token
+        set({ loading: false })
+      }
     }
   },
 }))

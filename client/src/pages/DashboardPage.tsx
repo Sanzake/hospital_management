@@ -57,6 +57,17 @@ export function DashboardPage() {
       desc: 'Visitors currently on-site',
       highlight: (stats?.openVisits || 0) > 0,
     },
+    {
+      label: 'Scheduled Shifts',
+      value: stats?.shifts,
+      to: '/shifts',
+      icon: CalendarClock,
+      color: 'from-amber-500 to-orange-600',
+      textColor: 'text-amber-700',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-100',
+      desc: 'Duty roster entries',
+    },
   ]
 
   if (user?.role === 'admin') {
@@ -71,17 +82,6 @@ export function DashboardPage() {
         bgColor: 'bg-violet-50',
         borderColor: 'border-violet-100',
         desc: 'Registered team members',
-      },
-      {
-        label: 'Scheduled Shifts',
-        value: stats?.shifts,
-        to: '/shifts',
-        icon: CalendarClock,
-        color: 'from-amber-500 to-orange-600',
-        textColor: 'text-amber-700',
-        bgColor: 'bg-amber-50',
-        borderColor: 'border-amber-100',
-        desc: 'Work roster entries',
       },
       {
         label: 'Summary Emails',

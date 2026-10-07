@@ -14,6 +14,7 @@ import {
 import { api } from '../api'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
+import { useAuth } from '../store/auth'
 import { useToast } from '../store/toast'
 import type { Patient, Visit } from '../types'
 import {
@@ -54,6 +55,7 @@ function getDuration(checkIn: string, checkOut: string | null) {
 }
 
 export function VisitorsPage() {
+  const { user } = useAuth()
   const [rows, setRows] = useState<Visit[]>([])
   const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
@@ -118,6 +120,10 @@ export function VisitorsPage() {
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
+    if (!form.patient_id) {
+      addToast('Please select an admitted patient', 'error')
+      return
+    }
     setBusy(true)
     setError('')
     try {
@@ -145,14 +151,21 @@ export function VisitorsPage() {
     setBusy(true)
     setError('')
     try {
-      await api(`/visitors/${closing.id}/close`, {
+      const closed = await api<Visit>(`/visitors/${closing.id}/close`, {
         method: 'POST',
         body: JSON.stringify({ summary }),
       })
-      addToast(
-        `Visit closed! Summary email triggered to ${closing.patients?.email || 'patient'}`,
-        'success',
-      )
+      if (closed.email_status === 'failed') {
+        addToast(
+          `Visit closed, but email failed: ${closed.email_error || 'Delivery issue'} (see Email Logs)`,
+          'error',
+        )
+      } else {
+        addToast(
+          `Visit closed! Summary email dispatched to ${closing.patients?.email || 'patient'}`,
+          'success',
+        )
+      }
       setClosing(null)
       setSummary('')
       await load()
@@ -378,14 +391,16 @@ export function VisitorsPage() {
                             <span>Summary</span>
                           </button>
                         )}
-                        <button
-                          type="button"
-                          className={btnDanger}
-                          onClick={() => setDeleting(row)}
-                          title="Delete visit record"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                        {user?.role === 'admin' && (
+                          <button
+                            type="button"
+                            className={btnDanger}
+                            onClick={() => setDeleting(row)}
+                            title="Delete visit record"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   )
@@ -405,6 +420,11 @@ export function VisitorsPage() {
           submitLabel={editing ? 'Save Changes' : 'Check In Visitor'}
           busy={busy}
         >
+          {patients.length === 0 && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 mb-2">
+              No patients registered yet. Please register a patient before logging visitors.
+            </div>
+          )}
           <div>
             <label className="block text-xs font-semibold text-slate-700">Visiting Patient</label>
             <select

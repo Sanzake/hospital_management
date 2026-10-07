@@ -5,7 +5,7 @@ import { authRequired, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 
 const router = Router();
-router.use(authRequired, requireRole('admin'));
+router.use(authRequired, requireRole('admin', 'staff'));
 
 const SELECT = 'id, staff_id, shift_date, start_time, end_time, notes, created_at, users(id, full_name, email, role)';
 
@@ -17,8 +17,8 @@ const schema = z
     end_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'End time is required (HH:MM)'),
     notes: z.string().optional().nullable(),
   })
-  .refine((d) => d.end_time > d.start_time, {
-    message: 'End time must be after start time',
+  .refine((d) => d.end_time !== d.start_time, {
+    message: 'End time cannot be the same as start time',
     path: ['end_time'],
   });
 
@@ -30,8 +30,8 @@ const updateSchema = z
     end_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'End time is required (HH:MM)').optional(),
     notes: z.string().optional().nullable(),
   })
-  .refine((d) => !d.start_time || !d.end_time || d.end_time > d.start_time, {
-    message: 'End time must be after start time',
+  .refine((d) => !d.start_time || !d.end_time || d.end_time !== d.start_time, {
+    message: 'End time cannot be the same as start time',
     path: ['end_time'],
   });
 
@@ -59,13 +59,13 @@ router.get('/:id', async (req, res) => {
   return res.json(data);
 });
 
-router.post('/', validate(schema), async (req, res) => {
+router.post('/', requireRole('admin'), validate(schema), async (req, res) => {
   const { data, error } = await supabase.from('shifts').insert(req.body).select(SELECT).single();
   if (error) return res.status(500).json({ error: error.message });
   return res.status(201).json(data);
 });
 
-router.put('/:id', validate(updateSchema), async (req, res) => {
+router.put('/:id', requireRole('admin'), validate(updateSchema), async (req, res) => {
   const { data, error } = await supabase
     .from('shifts')
     .update(req.body)
@@ -77,7 +77,7 @@ router.put('/:id', validate(updateSchema), async (req, res) => {
   return res.json(data);
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireRole('admin'), async (req, res) => {
   const { data, error } = await supabase
     .from('shifts')
     .delete()

@@ -42,10 +42,14 @@ export function EmailsPage() {
 
   const filteredRows = useMemo(() => {
     return rows.filter((item) => {
+      const pName = item.visitors?.patients?.full_name || ''
+      const vName = item.visitors?.visitor_name || ''
       const matchSearch =
         search.trim() === '' ||
         item.to_email.toLowerCase().includes(search.toLowerCase()) ||
-        item.subject.toLowerCase().includes(search.toLowerCase())
+        item.subject.toLowerCase().includes(search.toLowerCase()) ||
+        pName.toLowerCase().includes(search.toLowerCase()) ||
+        vName.toLowerCase().includes(search.toLowerCase())
 
       const matchStatus = statusFilter === 'all' || item.status === statusFilter
       return matchSearch && matchStatus
@@ -165,6 +169,14 @@ export function EmailsPage() {
                           <Mail className="h-3.5 w-3.5 text-slate-400" />
                           <span>{row.to_email}</span>
                         </div>
+                        {row.visitors?.patients?.full_name && (
+                          <div className="text-[11px] text-slate-500 mt-1 pl-5.5">
+                            For <span className="font-semibold text-slate-700">{row.visitors.patients.full_name}</span>
+                            {row.visitors.visitor_name && (
+                              <span className="text-slate-400"> (Visitor: {row.visitors.visitor_name})</span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td className={tdClass}>
                         <span className="text-sm font-medium text-slate-800">{row.subject}</span>
@@ -223,6 +235,18 @@ export function EmailsPage() {
                 <span className="text-slate-400">Recipient:</span>
                 <span className="font-semibold text-slate-900">{selected.to_email}</span>
               </div>
+              {selected.visitors?.patients?.full_name && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Associated Patient:</span>
+                  <span className="font-semibold text-slate-900">{selected.visitors.patients.full_name}</span>
+                </div>
+              )}
+              {selected.visitors?.visitor_name && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Visitor:</span>
+                  <span className="font-semibold text-slate-900">{selected.visitors.visitor_name}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-slate-400">Subject:</span>
                 <span className="font-semibold text-slate-900">{selected.subject}</span>
