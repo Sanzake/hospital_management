@@ -6,7 +6,11 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   }
   if (token) headers.set('Authorization', `Bearer ${token}`)
 
-  const res = await fetch(`/api${path}`, { ...options, headers })
+  const apiBase = import.meta.env.VITE_API_URL
+    ? `${import.meta.env.VITE_API_URL.replace(/\/+$/, '')}/api`
+    : '/api'
+
+  const res = await fetch(`${apiBase}${path}`, { ...options, headers })
   if (res.status === 204) return undefined as T
 
   const data = await res.json().catch(() => ({}))
