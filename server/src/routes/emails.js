@@ -17,8 +17,10 @@ router.get('/', async (req, res) => {
   }
 
   if (q && typeof q === 'string' && q.trim()) {
-    const term = q.trim();
-    query = query.or(`to_email.ilike.%${term}%,subject.ilike.%${term}%`);
+    const term = q.replace(/[,()]/g, ' ').trim();
+    if (term) {
+      query = query.or(`to_email.ilike.%${term}%,subject.ilike.%${term}%`);
+    }
   }
 
   query = query.order('sent_at', { ascending: false });

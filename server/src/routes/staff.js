@@ -66,6 +66,11 @@ router.post('/', validate(createSchema), async (req, res) => {
 
 router.put('/:id', validate(updateSchema), async (req, res) => {
   const patch = { ...req.body };
+
+  if (req.params.id === req.user.id && patch.role && patch.role !== 'admin') {
+    return res.status(400).json({ error: 'You cannot demote your own admin account' });
+  }
+
   if (patch.email) patch.email = patch.email.toLowerCase();
   if (patch.password) {
     patch.password_hash = await bcrypt.hash(patch.password, 10);

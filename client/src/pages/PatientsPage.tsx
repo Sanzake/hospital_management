@@ -13,6 +13,7 @@ import {
 import { api } from '../api'
 import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
+import { useAuth } from '../store/auth'
 import { useToast } from '../store/toast'
 import type { Patient, Priority } from '../types'
 import {
@@ -36,6 +37,7 @@ const priorityBadges: Record<Priority, { label: string; class: string; dot: stri
 }
 
 export function PatientsPage() {
+  const { user } = useAuth()
   const [rows, setRows] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -285,15 +287,17 @@ export function PatientsPage() {
                           <Edit2 className="h-3.5 w-3.5 text-slate-500" />
                           <span>Edit</span>
                         </button>
-                        <button
-                          type="button"
-                          className={btnDanger}
-                          onClick={() => setDeleting(row)}
-                          title="Delete patient"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          <span>Delete</span>
-                        </button>
+                        {user?.role === 'admin' && (
+                          <button
+                            type="button"
+                            className={btnDanger}
+                            onClick={() => setDeleting(row)}
+                            title="Delete patient"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        )}
                       </td>
                     </tr>
                   )

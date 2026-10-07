@@ -26,8 +26,10 @@ router.get('/', async (req, res) => {
   }
 
   if (q && typeof q === 'string' && q.trim()) {
-    const term = q.trim();
-    query = query.or(`full_name.ilike.%${term}%,email.ilike.%${term}%,phone.ilike.%${term}%`);
+    const term = q.replace(/[,()]/g, ' ').trim();
+    if (term) {
+      query = query.or(`full_name.ilike.%${term}%,email.ilike.%${term}%,phone.ilike.%${term}%`);
+    }
   }
 
   query = query.order('created_at', { ascending: false });
@@ -74,7 +76,7 @@ router.put('/:id', validate(updateSchema), async (req, res) => {
   return res.json(data);
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireRole('admin'), async (req, res) => {
   const { data, error } = await supabase
     .from('patients')
     .delete()

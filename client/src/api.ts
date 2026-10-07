@@ -15,6 +15,12 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
 
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
+    if (res.status === 401 && !path.startsWith('/auth/login')) {
+      localStorage.removeItem('hm-token')
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
+    }
     const message = typeof data.error === 'string' ? data.error : 'Request failed'
     throw new Error(message)
   }

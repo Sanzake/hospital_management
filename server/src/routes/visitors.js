@@ -34,8 +34,10 @@ router.get('/', async (req, res) => {
   }
 
   if (q && typeof q === 'string' && q.trim()) {
-    const term = q.trim();
-    query = query.or(`visitor_name.ilike.%${term}%,summary.ilike.%${term}%`);
+    const term = q.replace(/[,()]/g, ' ').trim();
+    if (term) {
+      query = query.or(`visitor_name.ilike.%${term}%,summary.ilike.%${term}%`);
+    }
   }
 
   query = query.order('created_at', { ascending: false });

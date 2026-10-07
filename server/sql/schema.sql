@@ -55,3 +55,15 @@ alter table patients enable row level security;
 alter table shifts enable row level security;
 alter table visitors enable row level security;
 alter table emails enable row level security;
+
+-- Performance indexes for foreign keys and frequent queries
+create index if not exists idx_patients_priority on patients(priority);
+create index if not exists idx_patients_created_at on patients(created_at desc);
+create index if not exists idx_shifts_staff on shifts(staff_id);
+create index if not exists idx_shifts_date on shifts(shift_date desc);
+create index if not exists idx_visitors_patient on visitors(patient_id);
+create index if not exists idx_visitors_status on visitors(status);
+create index if not exists idx_visitors_created_at on visitors(created_at desc);
+create index if not exists idx_emails_visitor on emails(visitor_id);
+create index if not exists idx_emails_sent_at on emails(sent_at desc);
+
