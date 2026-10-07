@@ -2,6 +2,10 @@
   "name": "hospital-manager",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
   "scripts": {
     "start": "node server/src/index.js",
     "dev": "concurrently -n \"api,web\" -c \"teal,cyan\" \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
@@ -11,6 +15,18 @@
     "build": "npm run build --prefix client",
     "dist": "npm run build",
     "lint": "npm run lint --prefix client"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.10.1",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "concurrently": "^10.0.5"
