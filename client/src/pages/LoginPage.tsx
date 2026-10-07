@@ -2,7 +2,10 @@ import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Activity, Lock, Mail, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../store/auth'
-import { btnPrimary, inputClass } from '../ui'
+import { btnPrimary } from '../ui'
+
+const darkInputClass =
+  'w-full rounded-xl border border-slate-700/80 bg-slate-950/90 py-2.5 text-sm text-white placeholder:text-slate-500 shadow-inner outline-none transition-all hover:border-slate-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/30'
 
 export function LoginPage() {
   const { token, login } = useAuth()
@@ -83,7 +86,7 @@ export function LoginPage() {
               <div className="relative mt-1.5">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
-                  className={`${inputClass} pl-10 bg-slate-950/60 border-slate-800 text-white placeholder:text-slate-500 focus:border-teal-500 focus:ring-teal-500/20`}
+                  className={`${darkInputClass} pl-10 pr-3.5`}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -100,7 +103,7 @@ export function LoginPage() {
               <div className="relative mt-1.5">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
-                  className={`${inputClass} pl-10 pr-10 bg-slate-950/60 border-slate-800 text-white placeholder:text-slate-500 focus:border-teal-500 focus:ring-teal-500/20`}
+                  className={`${darkInputClass} pl-10 pr-10`}
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -109,7 +112,7 @@ export function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
